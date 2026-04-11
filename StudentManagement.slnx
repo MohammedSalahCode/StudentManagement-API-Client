@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+  </Folder>
+  <Project Path="StudentManagement.API/StudentManagement.API.csproj" />
+  <Project Path="StudentManagement.Client/StudentManagement.Client.csproj" Id="0e7ac81b-aab1-4d4b-8b3c-9e2713aefbab" />
+</Solution>
