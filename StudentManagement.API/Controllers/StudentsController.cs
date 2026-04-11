@@ -76,5 +76,22 @@ namespace StudentManagement.API.Controllers
             return Ok(student);
         }
 
+        [HttpPost(Name = "AddStudent")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public ActionResult<Student> AddStudent(Student newStudent)
+        {
+            if (newStudent == null || string.IsNullOrEmpty(newStudent.Name) || newStudent.Age <= 0 || newStudent.Grade < 0)
+                return BadRequest("Invalid student data.");
+
+
+            newStudent.Id = StudentDataSimulation.StudentsList.Count > 0 ? StudentDataSimulation.StudentsList.Max(s => s.Id) + 1 : 1;
+
+            StudentDataSimulation.StudentsList.Add(newStudent);
+
+            return CreatedAtRoute("GetStudentById", new { id = newStudent.Id }, newStudent);
+
+        }
+
     }
 }

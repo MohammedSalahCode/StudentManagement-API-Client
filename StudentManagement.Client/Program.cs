@@ -10,7 +10,7 @@ namespace StudentApiClient
         static async Task Main(string[] args)
         {
 
-            httpClient.BaseAddress = new Uri("https://localhost:7244/api/Students/");
+            httpClient.BaseAddress = new Uri("http://localhost:5055/api/Students/");
 
             await GetAllStudents();
             await GetPassedStudents();
@@ -20,6 +20,11 @@ namespace StudentApiClient
             await GetStudentById(1);
             await GetStudentById(99999);
             await GetStudentById(-10);
+
+            var newStudent = new Student { Name = "Mazen Abdullah", Age = 20, Grade = 85 };
+            await AddStudent(newStudent);
+
+            await GetAllStudents();
 
             Console.ReadKey();
         }
@@ -147,6 +152,34 @@ namespace StudentApiClient
                 else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
                     Console.WriteLine($"Not Found: Student with ID {id} not found.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+        }
+
+        static async Task AddStudent(Student newStudent)
+        {
+            try
+            {
+                Console.WriteLine("\n_____________________________");
+                Console.WriteLine("\nAdding a new student...\n");
+
+                var response = await httpClient.PostAsJsonAsync("", newStudent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var addedStudent = await response.Content.ReadFromJsonAsync<Student>();
+
+                    if (addedStudent != null)
+                        Console.WriteLine($"Added Student - ID: {addedStudent.Id}, Name: {addedStudent.Name}, Age: {addedStudent.Age}, Grade: {addedStudent.Grade}");
+
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+                    Console.WriteLine("Bad Request: Invalid student data");
                 }
             }
             catch (Exception ex)
