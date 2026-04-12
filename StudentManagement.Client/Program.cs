@@ -26,6 +26,13 @@ namespace StudentApiClient
 
             await GetAllStudents();
 
+            //Delete
+            await DeleteStudent(-1);
+            await DeleteStudent(10000);
+            await DeleteStudent(1);
+
+            await GetAllStudents();
+
             Console.ReadKey();
         }
 
@@ -188,6 +195,33 @@ namespace StudentApiClient
             }
         }
 
+        static async Task DeleteStudent(int id)
+        {
+            try
+            {
+                Console.WriteLine("\n_____________________________");
+                Console.WriteLine($"\nDeleting student with ID {id}...\n");
+
+                var response = await httpClient.DeleteAsync($"{id}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Student with ID {id} has been deleted.");
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+                    Console.WriteLine($"Bad Request: Not accepted ID {id}");
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    Console.WriteLine($"Not Found: Student with ID {id} not found.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+        }
     }
 
     public class Student
