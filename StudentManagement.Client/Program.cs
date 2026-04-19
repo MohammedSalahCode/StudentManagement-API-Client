@@ -10,7 +10,7 @@ namespace StudentApiClient
         static async Task Main(string[] args)
         {
 
-            httpClient.BaseAddress = new Uri("http://localhost:5055/api/Students/");
+            httpClient.BaseAddress = new Uri("https://localhost:7244/api/Students/");
 
             await GetAllStudents();
             await GetPassedStudents();
