@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using StudentManagement.API.DataSimulation;
 using StudentManagement.API.Models;
 
 
 namespace StudentManagement.API.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/Students")]
     public class StudentsController : ControllerBase
