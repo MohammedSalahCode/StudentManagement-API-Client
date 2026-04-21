@@ -49,6 +49,8 @@ namespace StudentApiClient
 
                 var response = await httpClient.GetAsync("All");
 
+                if (HandleUnauthorized(response)) return;
+
                 if (response.IsSuccessStatusCode)
                 {
                     var students = await response.Content.ReadFromJsonAsync<List<Student>>();
@@ -85,6 +87,8 @@ namespace StudentApiClient
 
                 var response = await httpClient.GetAsync("Passed");
 
+                if (HandleUnauthorized(response)) return;
+
                 if (response.IsSuccessStatusCode)
                 {
                     var passedStudents = await response.Content.ReadFromJsonAsync<List<Student>>();
@@ -118,6 +122,8 @@ namespace StudentApiClient
 
                 var response = await httpClient.GetAsync("AverageGrade");
 
+                if (HandleUnauthorized(response)) return;
+
                 if (response.IsSuccessStatusCode)
                 {
                     var averageGrade = await response.Content.ReadFromJsonAsync<double>();
@@ -144,6 +150,8 @@ namespace StudentApiClient
                 Console.WriteLine($"\nFetching student with ID {id}...\n");
 
                 var response = await httpClient.GetAsync($"{id}");
+
+                if (HandleUnauthorized(response)) return;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -179,6 +187,8 @@ namespace StudentApiClient
 
                 var response = await httpClient.PostAsJsonAsync("", newStudent);
 
+                if (HandleUnauthorized(response)) return;
+
                 if (response.IsSuccessStatusCode)
                 {
                     var addedStudent = await response.Content.ReadFromJsonAsync<Student>();
@@ -206,6 +216,8 @@ namespace StudentApiClient
                 Console.WriteLine($"\nDeleting student with ID {id}...\n");
 
                 var response = await httpClient.DeleteAsync($"{id}");
+
+                if (HandleUnauthorized(response)) return;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -235,6 +247,8 @@ namespace StudentApiClient
 
                 var response = await httpClient.PutAsJsonAsync($"{id}", updatedStudent);
 
+                if (HandleUnauthorized(response)) return;
+
                 if (response.IsSuccessStatusCode)
                 {
                     var student = await response.Content.ReadFromJsonAsync<Student>();
@@ -253,6 +267,16 @@ namespace StudentApiClient
             {
                 Console.WriteLine($"An error occurred: {ex.Message}");
             }
+        }
+
+        static bool HandleUnauthorized(HttpResponseMessage response)
+        {
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                Console.WriteLine("401 Unauthorized - Authentication required (JWT)");
+                return true;
+            }
+            return false;
         }
     }
 
