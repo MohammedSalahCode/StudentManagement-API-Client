@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using StudentManagement.API.DataSimulation;
 using StudentManagement.API.Models;
+using System.Security.Claims;
 
 
 namespace StudentManagement.API.Controllers
@@ -77,6 +78,17 @@ namespace StudentManagement.API.Controllers
             {
                 return NotFound($"Student with ID {id} not found.");
             }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var userRole = User.FindFirstValue(ClaimTypes.Role);
+
+            int authenticatedStudentId = int.Parse(userId);
+
+            bool isAdmin = userRole == "Admin";
+
+            if (!isAdmin  && authenticatedStudentId != id)
+                return Forbid();
 
             return Ok(student);
         }
