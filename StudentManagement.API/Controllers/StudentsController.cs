@@ -66,7 +66,7 @@ namespace StudentManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<Student> GetStudentById(int id)
+        public async Task<ActionResult<Student>> GetStudentById(int id, [FromServices] IAuthorizationService authorizationService)
         {
             if (id < 1)
             {
@@ -79,16 +79,13 @@ namespace StudentManagement.API.Controllers
                 return NotFound($"Student with ID {id} not found.");
             }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var authResult = await authorizationService.AuthorizeAsync(
+                User,
+                id,
+                "StudentOwnerOrAdmin");
 
-            var userRole = User.FindFirstValue(ClaimTypes.Role);
-
-            int authenticatedStudentId = int.Parse(userId);
-
-            bool isAdmin = userRole == "Admin";
-
-            if (!isAdmin  && authenticatedStudentId != id)
-                return Forbid();
+            if (!authResult.Succeeded)
+                return Forbid(); 
 
             return Ok(student);
         }
