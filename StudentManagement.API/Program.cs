@@ -77,7 +77,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = "StudentApiUsers",
 
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes("THIS_IS_A_VERY_SECRET_KEY_123456"))
+                Encoding.UTF8.GetBytes("THIS_IS_A_VERY_SECRET_KEY_123456")),
+
+            ClockSkew = TimeSpan.Zero
         };
     });
 
