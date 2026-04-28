@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using StudentManagement.API.Authorization;
 using System.Text;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,25 @@ var builder = WebApplication.CreateBuilder(args);
 // Services Configuration
 // ===============================
 
+//Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("AuthLimiter", httpContext =>
+    {
+        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: ip,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            });
+    });
+});
 
 // Core Services
 builder.Services.AddControllers();
@@ -109,6 +129,8 @@ if (app.Environment.IsDevelopment())
 // Middleware order matters
 
 app.UseHttpsRedirection();
+
+app.UseRateLimiter();
 
 app.UseCors("StudentApiCorsPolicy");
 

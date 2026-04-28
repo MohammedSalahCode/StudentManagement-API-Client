@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using StudentManagement.API.DataSimulation;
 using StudentManagement.API.DTOs.Auth;
@@ -15,6 +16,7 @@ namespace StudentManagement.API.Controllers
     {
 
         [HttpPost("login")]
+        [EnableRateLimiting("AuthLimiter")]
         public IActionResult Login([FromBody] LoginRequest request)
         {
 
@@ -82,6 +84,7 @@ namespace StudentManagement.API.Controllers
 
 
         [HttpPost("refresh")]
+        [EnableRateLimiting("AuthLimiter")]
         public IActionResult Refresh([FromBody] RefreshRequest request)
         {
             var student = StudentDataSimulation.StudentsList
