@@ -15,10 +15,14 @@ namespace StudentManagement.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ILogger<AuthController> _logger;
+        private readonly string _jwtKey;
 
-        public AuthController(ILogger<AuthController> logger)
+        public AuthController(ILogger<AuthController> logger, IConfiguration configuration)
         {
             _logger = logger;
+
+            _jwtKey = configuration["Jwt:Key"]
+              ?? throw new InvalidOperationException("JWT Key is missing in configuration.");
         }
 
         [HttpPost("login")]
@@ -67,8 +71,7 @@ namespace StudentManagement.API.Controllers
             };
 
 
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes("THIS_IS_A_VERY_SECRET_KEY_123456"));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtKey));
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -179,8 +182,7 @@ namespace StudentManagement.API.Controllers
                 new Claim(ClaimTypes.Role, student.Role)
             };
 
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes("THIS_IS_A_VERY_SECRET_KEY_123456"));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtKey));
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
