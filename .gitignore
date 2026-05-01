@@ -16,3 +16,6 @@ publish/
 
 .DS_Store
 Thumbs.db
+
+# Local settings
+StudentManagement.API/appsettings.Development.json
