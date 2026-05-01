@@ -12,6 +12,12 @@ namespace StudentManagement.API.Controllers
     [Route("api/Students")]
     public class StudentsController : ControllerBase
     {
+        private readonly ILogger<StudentsController> _logger;
+
+        public StudentsController(ILogger<StudentsController> logger)
+        {
+            _logger = logger;
+        }
 
         [Authorize(Roles = "Admin")]
         [HttpGet("All", Name = "GetAllStudents")]
@@ -117,8 +123,18 @@ namespace StudentManagement.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult DeleteStudent(int id)
         {
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
+
             if (id < 1)
             {
+                _logger.LogWarning(
+                    "Admin action blocked (invalid id). AdminId={AdminId}, Action=DeleteStudent, TargetId={TargetId}, IP={IP}",
+                    adminId,
+                    id,
+                    ip
+                );
+
                 return BadRequest($"Not accepted ID {id}");
             }
 
@@ -126,10 +142,34 @@ namespace StudentManagement.API.Controllers
 
             if (student == null)
             {
+                _logger.LogWarning(
+                    "Admin action failed (target not found). AdminId={AdminId}, Action=DeleteStudent, TargetId={TargetId}, IP={IP}",
+                    adminId,
+                    id,
+                    ip
+                );
+
                 return NotFound($"Student with ID {id} not found.");
             }
 
+
+            _logger.LogInformation(
+                "Admin action started. AdminId={AdminId}, Action=DeleteStudent, TargetId={TargetId}, TargetEmail={TargetEmail}, IP={IP}",
+                adminId,
+                student.Id,
+                student.Email,
+                ip
+            );
+
             StudentDataSimulation.StudentsList.Remove(student);
+
+            _logger.LogInformation(
+                "Admin action succeeded. AdminId={AdminId}, Action=DeleteStudent, TargetId={TargetId}, IP={IP}",
+                adminId,
+                id,
+                ip
+            );
+
             return Ok($"Student with ID {id} has been deleted");
         }
 

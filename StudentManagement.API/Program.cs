@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using StudentManagement.API.Authorization;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
 
@@ -135,6 +136,24 @@ app.UseRateLimiter();
 app.UseCors("StudentApiCorsPolicy");
 
 app.UseAuthentication();
+
+// Global 403 logging 
+app.Use(async (context, next) =>
+{
+    await next();
+
+    if (context.Response.StatusCode == StatusCodes.Status403Forbidden)
+    {
+        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous";
+        var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var path = context.Request.Path.ToString();
+
+        app.Logger.LogWarning(
+            "Access Denied (403): User {UserId} attempted to access {Path} from IP {IP}",
+            userId, path, ip
+        );
+    }
+});
 
 app.UseAuthorization();
 

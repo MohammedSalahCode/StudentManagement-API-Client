@@ -14,23 +14,47 @@ namespace StudentManagement.API.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
+        private readonly ILogger<AuthController> _logger;
+
+        public AuthController(ILogger<AuthController> logger)
+        {
+            _logger = logger;
+        }
 
         [HttpPost("login")]
         [EnableRateLimiting("AuthLimiter")]
         public IActionResult Login([FromBody] LoginRequest request)
         {
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
             var student = StudentDataSimulation.StudentsList
                 .FirstOrDefault(s => s.Email == request.Email);
 
             if (student == null)
+            {
+                _logger.LogWarning(
+                "Failed login attempt (email not found). Email={Email}, IP={IP}",
+                request.Email,
+                ip
+                );
+
                 return Unauthorized("Invalid credentials");
+            }
+                
 
             bool isValidPassword =
                 BCrypt.Net.BCrypt.Verify(request.Password, student.PasswordHash);
 
             if (!isValidPassword)
+            {
+                _logger.LogWarning(
+                "Failed login attempt (bad password). Email={Email}, IP={IP}",
+                request.Email,
+                ip
+                );
+
                 return Unauthorized("Invalid credentials");
+            }
 
 
             var claims = new[]
@@ -65,6 +89,14 @@ namespace StudentManagement.API.Controllers
             student.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
             student.RefreshTokenRevokedAt = null;
 
+
+            _logger.LogInformation(
+             "Successful login. UserId={UserId}, Email={Email}, IP={IP}",
+             student.Id,
+             student.Email,
+             ip
+            );
+
             return Ok(new TokenResponse
             {
                 AccessToken = accessToken,
@@ -87,21 +119,58 @@ namespace StudentManagement.API.Controllers
         [EnableRateLimiting("AuthLimiter")]
         public IActionResult Refresh([FromBody] RefreshRequest request)
         {
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
             var student = StudentDataSimulation.StudentsList
                 .FirstOrDefault(s => s.Email == request.Email);
 
             if (student == null)
+            {
+                _logger.LogWarning(
+                    "Invalid refresh attempt (email not found). Email={Email}, IP={IP}",
+                    request.Email,
+                    ip
+                );
+
                 return Unauthorized("Invalid refresh request");
+            }
 
             if (student.RefreshTokenRevokedAt != null)
+            {
+                _logger.LogWarning(
+                    "Refresh attempt using revoked token. UserId={UserId}, Email={Email}, IP={IP}",
+                    student.Id,
+                    student.Email,
+                    ip
+                );
+
                 return Unauthorized("Refresh token is revoked");
+            }
 
             if (student.RefreshTokenExpiresAt == null || student.RefreshTokenExpiresAt <= DateTime.UtcNow)
+            {
+                _logger.LogWarning(
+                    "Refresh attempt using expired token. UserId={UserId}, Email={Email}, IP={IP}",
+                    student.Id,
+                    student.Email,
+                    ip
+                );
+
                 return Unauthorized("Refresh token expired");
+            }
 
             bool refreshValid = BCrypt.Net.BCrypt.Verify(request.RefreshToken, student.RefreshTokenHash);
             if (!refreshValid)
+            {
+                _logger.LogWarning(
+                    "Invalid refresh token attempt. UserId={UserId}, Email={Email}, IP={IP}",
+                    student.Id,
+                    student.Email,
+                    ip
+                );
+
                 return Unauthorized("Invalid refresh token");
+            }
 
             var claims = new[]
             {
@@ -130,6 +199,15 @@ namespace StudentManagement.API.Controllers
             student.RefreshTokenHash = BCrypt.Net.BCrypt.HashPassword(newRefreshToken);
             student.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
             student.RefreshTokenRevokedAt = null;
+
+
+            _logger.LogInformation(
+                "Refresh succeeded. UserId={UserId}, Email={Email}, IP={IP}",
+                student.Id,
+                student.Email,
+                ip
+            );
+
 
             return Ok(new TokenResponse
             {
